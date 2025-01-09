@@ -41,3 +41,4 @@ func GetBool(key string, fallback bool) bool {
 
 	return valAsBool
 }
+
