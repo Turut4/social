@@ -134,17 +134,16 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 func (app *application) postContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		postID := chi.URLParam(r, "postID")
-		id, err := strconv.ParseInt(postID, 10, 64)
+		postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
 		if err != nil {
 			app.internalServerError(w, r, err)
 			return
 		}
 
-		post, err := app.store.Posts.GetByID(ctx, id)
+		post, err := app.store.Posts.GetByID(ctx, postID)
 		if err != nil {
-			switch {
-			case errors.Is(err, store.ErrNotFound):
+			switch err {
+			case store.ErrNotFound:
 				app.notFoundResponse(w, r, err)
 			default:
 				app.internalServerError(w, r, err)

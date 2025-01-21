@@ -63,7 +63,7 @@ func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	var post Post
+	post := &Post{}
 	err := s.db.QueryRowContext(
 		ctx,
 		query,
@@ -87,7 +87,7 @@ func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 		}
 	}
 
-	return &post, nil
+	return post, nil
 }
 
 func (s *PostStore) Delete(ctx context.Context, id int64) error {
