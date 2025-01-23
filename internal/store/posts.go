@@ -53,7 +53,7 @@ func (s *PostStore) Create(ctx context.Context, post *Post) error {
 	return nil
 }
 
-func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
+func (s *PostStore) GetByID(ctx context.Context, postID int64) (*Post, error) {
 	query := `
 		SELECT id, user_id, title, content, created_at, updated_at, tags, version
 		FROM posts
@@ -67,7 +67,7 @@ func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 	err := s.db.QueryRowContext(
 		ctx,
 		query,
-		id,
+		postID,
 	).Scan(
 		&post.ID,
 		&post.UserID,
@@ -90,7 +90,7 @@ func (s *PostStore) GetByID(ctx context.Context, id int64) (*Post, error) {
 	return post, nil
 }
 
-func (s *PostStore) Delete(ctx context.Context, id int64) error {
+func (s *PostStore) Delete(ctx context.Context, postID int64) error {
 	query := `
 		DELETE FROM posts 
     WHERE id = $1
@@ -99,7 +99,7 @@ func (s *PostStore) Delete(ctx context.Context, id int64) error {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	res, err := s.db.ExecContext(ctx, query, id)
+	res, err := s.db.ExecContext(ctx, query, postID)
 	if err != nil {
 		return err
 	}

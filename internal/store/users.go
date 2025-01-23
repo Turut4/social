@@ -41,7 +41,7 @@ func (s *UserStore) Create(ctx context.Context, user *User) error {
 	return nil
 }
 
-func (s *UserStore) GetByID(ctx context.Context, id int64) (*User, error) {
+func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 	query := `
 		SELECT id, username, email, created_at
 		FROM users 
@@ -55,7 +55,7 @@ func (s *UserStore) GetByID(ctx context.Context, id int64) (*User, error) {
 	err := s.db.QueryRowContext(
 		ctx,
 		query,
-		id,
+		userID,
 	).Scan(
 		&user.ID,
 		&user.Username,
