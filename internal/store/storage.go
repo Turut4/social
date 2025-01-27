@@ -14,18 +14,19 @@ var (
 
 type Storage struct {
 	Posts interface {
-		Create(ctx context.Context, post *Post) error
-		GetByID(ctx context.Context, postID int64) (*Post, error)
-		Delete(ctx context.Context, postID int64) error
-		Update(ctx context.Context, post *Post) error
+		Create(context.Context, *Post) error
+		GetByID(context.Context, int64) (*Post, error)
+		Delete(context.Context, int64) error
+		Update(context.Context, *Post) error
+		GetUserFeed(context.Context, int64, PaginatedFeedQuery) ([]PostWithMetadata, error)
 	}
 	Users interface {
-		Create(ctx context.Context, user *User) error
-		GetByID(ctx context.Context, userID int64) (*User, error)
+		Create(context.Context, *User) error
+		GetByID(context.Context, int64) (*User, error)
 	}
 	Comments interface {
-		Create(ctx context.Context, comment *Comment) error
-		GetByPostID(ctx context.Context, postID int64) ([]Comment, error)
+		Create(context.Context, *Comment) error
+		GetByPostID(context.Context, int64) ([]Comment, error)
 	}
 	Followers interface {
 		Follow(ctx context.Context, followerID, userID int64) error
@@ -35,9 +36,9 @@ type Storage struct {
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Posts:    &PostStore{db},
-		Users:    &UserStore{db},
-		Comments: &CommentStore{db},
+		Posts:     &PostStore{db},
+		Users:     &UserStore{db},
+		Comments:  &CommentStore{db},
 		Followers: &FollowerStore{db},
 	}
 }
