@@ -20,6 +20,19 @@ type postKey string
 
 const postCtx postKey = "post"
 
+// CreatePost gdoc
+//
+//	@Summary		Create a new post
+//	@Description	Create a new post with title, content, and optional tags
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		CreatePostPayload	true	"Post payload"
+//	@Success		200		{object}	store.Post			"Created post"
+//	@Failure		400		{object}	error				"Invalid input"
+//	@Failure		500		{object}	error				"Internal server error"
+//	@Security		ApiKeyAuth
+//	@Router			/posts [post]
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreatePostPayload
 	if err := readJSON(w, r, &payload); err != nil {
@@ -52,6 +65,19 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// GetPost gdoc
+//
+//	@Summary		Get a post by ID
+//	@Description	Retrieve a post and its comments by ID
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			postID	path		int			true	"Post ID"
+//	@Success		200		{object}	store.Post	"Post details with comments"
+//	@Failure		404		{object}	error		"Post not found"
+//	@Failure		500		{object}	error		"Internal server error"
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{postID} [get]
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostByCtx(r)
 
@@ -74,6 +100,21 @@ type updatePostPayload struct {
 	Content *string `json:"content" validate:"omitempty,max=1000"`
 }
 
+// UpdatePost gdoc
+//
+//	@Summary		Update a post
+//	@Description	Update the title or content of a post by ID
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			postID	path		int					true	"Post ID"
+//	@Param			request	body		updatePostPayload	true	"Update payload"
+//	@Success		200		{object}	store.Post			"Updated post"
+//	@Failure		400		{object}	error				"Invalid input"
+//	@Failure		404		{object}	error				"Post not found"
+//	@Failure		500		{object}	error				"Internal server error"
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{postID} [put]
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostByCtx(r)
 	var payload updatePostPayload
@@ -109,6 +150,20 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 }
+
+// DeletePost gdoc
+//
+//	@Summary		Delete a post
+//	@Description	Delete a post by its ID
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			postID	path		int		true	"Post ID"
+//	@Success		204		{string}	string	"Post deleted"
+//	@Failure		404		{object}	error	"Post not found"
+//	@Failure		500		{object}	error	"Internal server error"
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{postID} [delete]
 func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	postID := chi.URLParam(r, "postID")
@@ -131,6 +186,20 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// CreateComment gdoc
+//
+//	@Summary		Add a comment to a post
+//	@Description	Add a comment to a post by ID
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			postID	path		int						true	"Post ID"
+//	@Param			request	body		createCommentPayload	true	"Comment payload"
+//	@Success		201		{object}	store.Comment			"Created comment"
+//	@Failure		400		{object}	error					"Invalid input"
+//	@Failure		500		{object}	error					"Internal server error"
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{postID}/comments [post]
 func (app *application) postContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
