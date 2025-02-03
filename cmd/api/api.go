@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"github.com/turut4/social/docs"
+	"github.com/turut4/social/internal/mailer"
 	"github.com/turut4/social/internal/store"
 	"go.uber.org/zap"
 )
@@ -17,6 +18,7 @@ type application struct {
 	config config
 	store  store.Storage
 	logger *zap.SugaredLogger
+	mailer mailer.Client
 }
 
 type config struct {
@@ -24,6 +26,7 @@ type config struct {
 	apiURL string
 	db     dbConfig
 	env    string
+	mail   mailConfig
 }
 
 type dbConfig struct {
@@ -31,6 +34,10 @@ type dbConfig struct {
 	maxOpenConns int
 	maxIdleConns int
 	maxIdleTime  string
+}
+
+type mailConfig struct {
+	exp time.Duration
 }
 
 func (app *application) mount() http.Handler {
@@ -61,6 +68,7 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/users", func(r chi.Router) {
+			r.Put("/activate/{token}", app.actvateUserHandler)
 			r.Get("/feed", app.getUserFeedHandler)
 
 			r.Route("/{userID}", func(r chi.Router) {
@@ -70,6 +78,10 @@ func (app *application) mount() http.Handler {
 				r.Put("/unfollow", app.unfollowUserHandler)
 
 			})
+		})
+
+		r.Route("/authentication", func(r chi.Router) {
+			r.Post("/users", app.registerUserHandler)
 		})
 	})
 
@@ -89,6 +101,6 @@ func (app *application) run(mux http.Handler) error {
 		IdleTimeout:  time.Minute,
 	}
 
-	app.logger.Infow("server has started at %s", "addr",app.config.addr, "env", app.config.env)
+	app.logger.Infow("server has started", "addr", app.config.addr, "env", app.config.env)
 	return srv.ListenAndServe()
 }

@@ -25,5 +25,5 @@ func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request,
 func (app *application) conflictResponse(w http.ResponseWriter, r *http.Request, err error) {
 	app.logger.Warnw("conflict", "method", r.Method, "path", r.URL.Path, "error", err.Error())
 
-	writeJSONError(w, http.StatusConflict, "conflicted data")
+	writeJSONError(w, http.StatusConflict, err.Error())
 }

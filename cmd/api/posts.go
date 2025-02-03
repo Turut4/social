@@ -28,7 +28,7 @@ const postCtx postKey = "post"
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		CreatePostPayload	true	"Post payload"
-//	@Success		200		{object}	store.Post			"Created post"
+//	@Success		201		{object}	store.Post			"Created post"
 //	@Failure		400		{object}	error				"Invalid input"
 //	@Failure		500		{object}	error				"Internal server error"
 //	@Security		ApiKeyAuth
@@ -59,9 +59,8 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
+	if err := app.jsonResponse(w, http.StatusCreated, post); err != nil {
 		app.internalServerError(w, r, err)
-		return
 	}
 }
 
@@ -91,7 +90,6 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
-		return
 	}
 }
 
@@ -136,8 +134,8 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	if err := app.store.Posts.Update(r.Context(), post); err != nil {
-		switch {
-		case errors.Is(err, store.ErrNotFound):
+		switch err {
+		case store.ErrNotFound:
 			app.conflictResponse(w, r, err)
 		default:
 			app.internalServerError(w, r, err)
@@ -147,7 +145,6 @@ func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request
 
 	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
-		return
 	}
 }
 
@@ -261,7 +258,6 @@ func (app *application) createCommentHandler(w http.ResponseWriter, r *http.Requ
 
 	if err := app.jsonResponse(w, http.StatusCreated, comment); err != nil {
 		app.internalServerError(w, r, err)
-		return
 	}
 }
 

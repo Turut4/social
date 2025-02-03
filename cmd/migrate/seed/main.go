@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	addr := env.GetString("DB _ADDR", "postgres://admin:adminpassword@localhost/social?sslmode=disable")
+	addr := env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/socialnetwork?sslmode=disable")
 	conn, err := db.New(addr, 30, 30, "15m")
 	if err != nil {
 		log.Fatal(err)
@@ -17,5 +17,5 @@ func main() {
 
 	defer conn.Close()
 	store := store.NewStorage(conn)
-	db.Seed(store)
+	db.Seed(store, conn)
 }

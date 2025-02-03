@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"math/rand"
@@ -73,19 +74,25 @@ var comments = []string{
 	"Finally, someone explained this properly!", "This is gold! Saving for later.", "Outstanding content as always.", "Such a helpful resource!",
 }
 
-func Seed(store store.Storage) {
+func Seed(store store.Storage, db *sql.DB) {
 	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return
+	}
 
-	users := generateUsers(100)
-	
+	users := generateUsers(300)
 	for _, user := range users {
-		if err := store.Users.Create(ctx, user); err != nil {
+		if err := store.Users.Create(ctx, tx, user); err != nil {
+			_ = tx.Rollback()
 			log.Println("Error creating user: ", err)
 			return
 		}
 	}
 
-	posts := generatePosts(200, users)
+	tx.Commit()
+
+	posts := generatePosts(500, users)
 	for _, post := range posts {
 		if err := store.Posts.Create(ctx, post); err != nil {
 			log.Println("Error creating post: ", err)
@@ -93,7 +100,7 @@ func Seed(store store.Storage) {
 		}
 	}
 
-	comments := generateComments(500, users, posts)
+	comments := generateComments(1000, users, posts)
 	for _, comment := range comments {
 		if err := store.Comments.Create(ctx, comment); err != nil {
 			log.Println("Error creating comment: ", err)
@@ -111,7 +118,6 @@ func generateUsers(num int) []*store.User {
 		users[i] = &store.User{
 			Username: usernames[i%len(usernames)] + fmt.Sprintf("%d", i),
 			Email:    usernames[i%len(usernames)] + fmt.Sprintf("%d", i) + "@example.com",
-			Password: "pass1234",
 		}
 	}
 
