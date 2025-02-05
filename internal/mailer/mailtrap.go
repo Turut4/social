@@ -14,10 +14,10 @@ func NewMailTrap(apiKey, fromEmail string) MailTrapClient {
 	}
 }
 
-func (m MailTrapClient) Send(templateFile, email, username string, data any, isSandbox bool) error {
+func (m MailTrapClient) Send(templateFile, email, username string, data any, isSandbox bool) (int, error) {
 	subject, body, err := parseTemplate(templateFile, data)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	message := gomail.NewMessage()
@@ -30,8 +30,8 @@ func (m MailTrapClient) Send(templateFile, email, username string, data any, isS
 	if err := retry(func() error {
 		return dialer.DialAndSend()
 	}, MaxRetries); err != nil {
-		return err
+		return -1, err
 	}
 
-	return nil
+	return 200, nil
 }

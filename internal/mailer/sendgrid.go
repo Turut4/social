@@ -24,13 +24,13 @@ func NewSendGrid(apiKey, fromEmail string) *SendGridMailer {
 	}
 }
 
-func (m *SendGridMailer) Send(templateFile, username, email string, data any, isSandbox bool) error {
+func (m *SendGridMailer) Send(templateFile, username, email string, data any, isSandbox bool) (int, error) {
 	from := mail.NewEmail(FromName, m.fromEmail)
 	to := mail.NewEmail(username, email)
 
 	subject, body, err := parseTemplate(templateFile, data)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	message := mail.NewSingleEmail(from, subject, to, "", body)
@@ -41,21 +41,23 @@ func (m *SendGridMailer) Send(templateFile, username, email string, data any, is
 		},
 	})
 
+	var resStatus int
 	if err := retry(func() error {
-		return m.sendEmail(email, message)
-	}, MaxRetries); err != nil {
+		resStatus, err = m.sendEmail(email, message)
 		return err
+	}, MaxRetries); err != nil {
+		return -1, err
 	}
 
-	return nil
+	return resStatus, err
 }
 
-func (m *SendGridMailer) sendEmail(email string, message *mail.SGMailV3) error {
+func (m *SendGridMailer) sendEmail(email string, message *mail.SGMailV3) (int, error) {
 	res, err := m.client.Send(message)
 	if err != nil {
-		return fmt.Errorf("failed to send email to %v: %w", email, err)
+		return res.StatusCode, fmt.Errorf("failed to send email to %v: %w", email, err)
 	}
 
 	log.Printf("email sent to %v with status code %v", email, res.StatusCode)
-	return nil
+	return res.StatusCode, nil
 }

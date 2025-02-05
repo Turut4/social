@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"log"
 	"time"
 )
 
@@ -19,7 +18,7 @@ const (
 var FS embed.FS
 
 type Client interface {
-	Send(templateFile, username, email string, data any, isSandbox bool) error
+	Send(templateFile, username, email string, data any, isSandbox bool) (int, error)
 }
 
 func parseTemplate(templateFile string, data any) (subject, body string, err error) {
@@ -55,7 +54,6 @@ func retry(fn func() error, times int) error {
 			return nil
 		}
 
-		log.Printf("attempt %d of %d", i+1, MaxRetries)
 		time.Sleep(time.Second * time.Duration(i+1))
 	}
 
