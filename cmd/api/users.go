@@ -28,7 +28,7 @@ const userCtx userKey = "user"
 //	@Security		ApiKeyAuth
 //	@Router			/users/{id} [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
-	user := getUserByCtx(r)
+	user := getUserFromContext(r)
 
 	if err := app.jsonResponse(w, http.StatusOK, user); err != nil {
 		app.internalServerError(w, r, err)
@@ -53,7 +53,7 @@ type followUser struct {
 //	@Security		ApiKeyAuth
 //	@Router			/users/{userID}/follow [put]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
-	followedUser := getUserByCtx(r)
+	followedUser := getUserFromContext(r)
 
 	//revert back to auth userID from ctx
 	var payload followUser
@@ -86,7 +86,7 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 //	@Security		ApiKeyAuth
 //	@Router			/users/{userID}/unfollow [put]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
-	unfollowedUser := getUserByCtx(r)
+	unfollowedUser := getUserFromContext(r)
 
 	//revert back to auth userID from ctx
 	var payload followUser
@@ -131,7 +131,7 @@ func (app *application) userContextMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func getUserByCtx(r *http.Request) *store.User {
+func getUserFromContext(r *http.Request) *store.User {
 	user, _ := r.Context().Value(userCtx).(*store.User)
 	return user
 }
@@ -163,7 +163,7 @@ func (app *application) actvateUserHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := app.jsonResponse(w, http.StatusNoContent, ""); err != nil {
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }

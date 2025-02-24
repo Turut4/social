@@ -45,12 +45,12 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	user := getUserFromContext(r)
 	post := &store.Post{
 		Title:   payload.Title,
 		Content: payload.Content,
 		Tags:    payload.Tags,
-		//TODO: Change after auth
-		UserID: 1,
+		UserID:  user.ID,
 	}
 
 	ctx := r.Context()
@@ -78,7 +78,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 //	@Security		ApiKeyAuth
 //	@Router			/posts/{postID} [get]
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
-	post := getPostByCtx(r)
+	post := getPostFromContext(r)
 
 	comments, err := app.store.Comments.GetByPostID(r.Context(), post.ID)
 	if err != nil {
@@ -114,7 +114,7 @@ type updatePostPayload struct {
 //	@Security		ApiKeyAuth
 //	@Router			/posts/{postID} [put]
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
-	post := getPostByCtx(r)
+	post := getPostFromContext(r)
 	var payload updatePostPayload
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestResponse(w, r, err)
@@ -223,7 +223,7 @@ func (app *application) postContextMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func getPostByCtx(r *http.Request) *store.Post {
+func getPostFromContext(r *http.Request) *store.Post {
 	post, _ := r.Context().Value(postCtx).(*store.Post)
 	return post
 }
@@ -233,7 +233,7 @@ type createCommentPayload struct {
 }
 
 func (app *application) createCommentHandler(w http.ResponseWriter, r *http.Request) {
-	post := getPostByCtx(r)
+	post := getPostFromContext(r)
 	var payload createCommentPayload
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestResponse(w, r, err)
@@ -260,4 +260,3 @@ func (app *application) createCommentHandler(w http.ResponseWriter, r *http.Requ
 		app.internalServerError(w, r, err)
 	}
 }
-
