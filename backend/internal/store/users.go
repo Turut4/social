@@ -22,8 +22,9 @@ type User struct {
 	Password  password `json:"-"`
 	Email     string   `json:"email"`
 	RoleID    int64    `json:"role_id"`
-	CreatedAt string   `json:"created_at"`
-	IsActive  bool     `json:"is_active"`
+	Role      Role
+	CreatedAt string `json:"created_at"`
+	IsActive  bool   `json:"is_active"`
 }
 
 type password struct {
@@ -99,9 +100,10 @@ func (s *UserStore) Delete(ctx context.Context, userID int64) error {
 
 func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 	query := `
-		SELECT id, username, email, password, created_at
-		FROM Users
-		WHERE id = $1 AND is_active = true
+		SELECT users.id, username, email, password, created_at, roles.*
+		FROM users
+		JOIN roles ON (users.role_id = roles.id)
+		WHERE users.id = $1 AND is_active = true
 	`
 
 	user := &User{}
@@ -118,6 +120,10 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 		&user.Email,
 		&user.Password.hash,
 		&user.CreatedAt,
+		&user.Role.ID,
+		&user.Role.Name,
+		&user.Role.Level,
+		&user.Role.Description,
 	)
 
 	if err != nil {

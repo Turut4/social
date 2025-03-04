@@ -112,7 +112,7 @@ type updatePostPayload struct {
 //	@Failure		404		{object}	error				"Post not found"
 //	@Failure		500		{object}	error				"Internal server error"
 //	@Security		ApiKeyAuth
-//	@Router			/posts/{postID} [put]
+//	@Router			/posts/{postID} [patch]
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromContext(r)
 	var payload updatePostPayload
@@ -199,13 +199,13 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 //	@Router			/posts/{postID}/comments [post]
 func (app *application) postContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
 		postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
 		if err != nil {
 			app.internalServerError(w, r, err)
 			return
 		}
 
+		ctx := r.Context()
 		post, err := app.store.Posts.GetByID(ctx, postID)
 		if err != nil {
 			switch err {
@@ -213,7 +213,6 @@ func (app *application) postContextMiddleware(next http.Handler) http.Handler {
 				app.notFoundResponse(w, r, err)
 			default:
 				app.internalServerError(w, r, err)
-
 			}
 			return
 		}
