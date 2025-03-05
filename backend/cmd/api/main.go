@@ -4,11 +4,13 @@ import (
 	"log"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/turut4/social/internal/auth"
 	"github.com/turut4/social/internal/db"
 	"github.com/turut4/social/internal/env"
 	"github.com/turut4/social/internal/mailer"
 	"github.com/turut4/social/internal/store"
+	"github.com/turut4/social/internal/store/cache"
 	"go.uber.org/zap"
 )
 
@@ -49,6 +51,12 @@ func main() {
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
+		redisCfg: redisConfig{
+			addr:    env.GetString("REDIS_ADDR", "localhost:6379"),
+			pw:      env.GetString("REDIS_PW", ""),
+			db:      env.GetInt("REDIS_DB", 0),
+			enabled: env.GetBool("REDIS_ENABLED", false),
+		},
 		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:4000"),
 		mail: mailConfig{
 			exp: time.Hour * 24 * 3, // 3 days
@@ -77,7 +85,15 @@ func main() {
 	defer db.Close()
 	logger.Info("database connection pool established")
 
+	var rdb *redis.Client
+	if cfg.redisCfg.enabled {
+		rdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
+		logger.Info("redis connection stablisehd")
+	}
+
 	store := store.NewStorage(db)
+
+	cacheStorage := cache.NewRedisStorage(rdb)
 
 	jwtAuthenticator := auth.NewJWTAuthenticator(cfg.auth.token.secret, cfg.auth.token.iss, cfg.auth.token.iss)
 
@@ -85,6 +101,7 @@ func main() {
 	app := &application{
 		config:        cfg,
 		store:         store,
+		cacheStorage:  cacheStorage,
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,

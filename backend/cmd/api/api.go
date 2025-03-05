@@ -14,12 +14,14 @@ import (
 	"github.com/turut4/social/internal/env"
 	"github.com/turut4/social/internal/mailer"
 	"github.com/turut4/social/internal/store"
+	"github.com/turut4/social/internal/store/cache"
 	"go.uber.org/zap"
 )
 
 type application struct {
 	config        config
 	store         store.Storage
+	cacheStorage  cache.Storage
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
@@ -33,8 +35,15 @@ type config struct {
 	env         string
 	mail        mailConfig
 	auth        authConfig
+	redisCfg    redisConfig
 }
 
+type redisConfig struct {
+	addr    string
+	pw      string
+	db      int
+	enabled bool
+}
 type authConfig struct {
 	basic basicConfig
 	token tokenConfig
@@ -94,6 +103,7 @@ func (app *application) mount() http.Handler {
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 
 		r.Route("/posts", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
 			r.Post("/", app.createPostHandler)
 			r.Route("/{postID}", func(r chi.Router) {
 				r.Use(app.postContextMiddleware)
@@ -110,7 +120,6 @@ func (app *application) mount() http.Handler {
 
 			r.Route("/{userID}", func(r chi.Router) {
 				r.Use(app.AuthTokenMiddleware)
-
 				r.Get("/", app.getUserHandler)
 				r.Put("/follow", app.followUserHandler)
 				r.Put("/unfollow", app.unfollowUserHandler)

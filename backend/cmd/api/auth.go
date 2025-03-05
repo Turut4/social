@@ -53,7 +53,9 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	user := &store.User{
 		Username: payload.Username,
 		Email:    payload.Email,
-		RoleID: 1,
+		Role: store.Role{
+			Name: "user",
+		},
 	}
 
 	if err := user.Password.Set(payload.Password); err != nil {
@@ -149,7 +151,7 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 		app.unauthorizedErrorResponse(w, r, err)
 		return
 	}
-	
+
 	claims := jwt.MapClaims{
 		"sub": user.ID,
 		"exp": time.Now().Add(app.config.auth.token.exp).Unix(),
