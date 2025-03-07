@@ -294,11 +294,11 @@ func (s *UserStore) delete(ctx context.Context, tx *sql.Tx, userID int64) error 
 
 func (s *UserStore) deleteUserInvitation(ctx context.Context, tx *sql.Tx, userID int64) error {
 	query := `DELETE FROM user_invitations WHERE user_id = $1`
-	_, err := tx.ExecContext(ctx, query, userID)
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
+	_, err := tx.ExecContext(ctx, query, userID)
 	if err != nil {
 		return err
 	}
